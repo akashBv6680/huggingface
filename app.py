@@ -12,11 +12,12 @@ st.markdown("Choose a model from the dropdown to classify your image. This app u
 st.write("---")
 
 # A dictionary mapping user-friendly names to Hugging Face model IDs
+# The VGG16 and InceptionV3 model names have been corrected.
 MODEL_MAP = {
     "ResNet-50": "microsoft/resnet-50",
     "EfficientNetB0": "google/efficientnet-b0",
-    "VGG16": "nvidia/vgg16",
-    "InceptionV3": "google/inception_v3",
+    "VGG16": "timm/vgg16_bn.tv_in1k",
+    "InceptionV3": "timm/inception_v3.tv_in1k",
     "MobileNetV1": "google/mobilenet_v1_1.0_224",
 }
 
