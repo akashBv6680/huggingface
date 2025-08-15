@@ -74,8 +74,8 @@ def load_model_and_processor(model_name):
                 ])
                 
             elif model_name == "InceptionV3":
-                # InceptionV3 needs a specific input size and we turn off aux_logits for inference
-                model = models.inception_v3(weights=models.Inception_V3_Weights.DEFAULT, aux_logits=False)
+                # InceptionV3 needs a specific input size and requires aux_logits=True
+                model = models.inception_v3(weights=models.Inception_V3_Weights.DEFAULT, aux_logits=True)
                 processor = transforms.Compose([
                     transforms.Resize(299),
                     transforms.CenterCrop(299),
@@ -137,17 +137,20 @@ if uploaded_file is not None:
         elif model_config["type"] == "torchvision":
             # Preprocess the image with the torchvision processor.
             input_tensor = processor(image)
-            inputs = {"pixel_values": input_tensor.unsqueeze(0)}
+            inputs = input_tensor.unsqueeze(0) # Add a batch dimension
         
         # Make the classification.
         with torch.no_grad():
-            output = model(**inputs) if model_config["type"] == "huggingface" else model(inputs["pixel_values"])
-            
-        # Handle the special case where InceptionV3 might return a tuple
-        if selected_model_name == "InceptionV3" and isinstance(output, tuple):
-             logits = output.logits
-        else:
-             logits = output.logits if hasattr(output, 'logits') else output
+            if model_config["type"] == "huggingface":
+                 outputs = model(**inputs)
+                 logits = outputs.logits
+            elif model_config["type"] == "torchvision":
+                 outputs = model(inputs)
+                 # Handle the special case where InceptionV3 returns a tuple
+                 if isinstance(outputs, tuple):
+                    logits = outputs[0]
+                 else:
+                    logits = outputs
              
         probabilities = torch.nn.functional.softmax(logits, dim=1)[0]
         top_5_probs, top_5_indices = torch.topk(probabilities, 5)
